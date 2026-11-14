@@ -49,11 +49,24 @@ export function markIdempotency(key, response) {
   persist();
 }
 
+/** Gatekeeper tasks: a retried task_id must return the original response, not a replay rejection. */
+export function getTaskResponse(taskId) {
+  if (!taskId) return null;
+  return state.tasks?.[taskId] ?? null;
+}
+
+export function markTaskResponse(taskId, response) {
+  if (!taskId) return;
+  state.tasks = state.tasks || {};
+  state.tasks[taskId] = response;
+  persist();
+}
+
 export function getTurnResponse(key) {
   return state.idempotency[key]?.response ?? null;
 }
 
 export function resetForTests() {
-  state = { usedProofs: {}, idempotency: {}, seenTurns: {} };
+  state = { usedProofs: {}, idempotency: {}, seenTurns: {}, tasks: {} };
   persist();
 }

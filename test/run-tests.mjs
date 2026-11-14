@@ -70,6 +70,18 @@ test("decide: a replayed proof reference is rejected the second time", () => {
   assert.equal(gatekeeper.decide(input).reason_code, "PROOF_REUSED");
 });
 
+test("gatekeeper: a retried task_id returns the original answer, not PROOF_REUSED", async () => {
+  store.resetForTests();
+  const t = task({ proof_tx: "0xretry01" });
+  const first = await gatekeeper.handleTask(t, { verify: gatekeeper.verifyLocally });
+  const again = await gatekeeper.handleTask(t, { verify: gatekeeper.verifyLocally });
+  assert.equal(first.decision, "APPROVE");
+  assert.equal(again.decision, "APPROVE", "retry must not become a replay rejection");
+  assert.equal(again.reason_code, "VALID_CONDITION");
+  assert.equal(again.replayed, true);
+  assert.deepEqual(again.public_signals, first.public_signals);
+});
+
 test("decide: malformed input throws (caller fails closed)", () => {
   store.resetForTests();
   const broken = { ...task().input };

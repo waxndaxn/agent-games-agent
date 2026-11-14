@@ -162,6 +162,12 @@ export async function submitToKurier(proof, publicSignals) {
  */
 export async function handleTask(task, { includeProof = true, verify = null } = {}) {
   const input = { ...task.input, task_id: task.task_id };
+
+  // Idempotency: the platform retries after network failures. A retried task must get the same answer —
+  // deciding again would trip the replay check and turn a valid approval into PROOF_REUSED.
+  const cached = store.getTaskResponse(task.task_id);
+  if (cached) return { ...cached, replayed: true };
+
   const decision = decide(input);
   store.markProof(input.proof_tx, { taskId: task.task_id });
 
@@ -184,5 +190,6 @@ export async function handleTask(task, { includeProof = true, verify = null } = 
     body.proof_error = e.message;
     if (decision.decision === "APPROVE") throw e; // never approve without evidence
   }
+  store.markTaskResponse(task.task_id, body);
   return body;
 }
