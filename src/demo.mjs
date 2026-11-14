@@ -34,11 +34,13 @@ export async function demoJson(name = "valid") {
   const decision = gatekeeper.decide(input);
   let proofOk = null;
   let publicSignals = null;
+  let proof = null;
   let error = null;
   try {
-    const { proof, publicSignals: ps } = await gatekeeper.prove(input, decision.decisionBit);
-    publicSignals = ps;
-    proofOk = await gatekeeper.verifyLocally(proof, ps);
+    const out = await gatekeeper.prove(input, decision.decisionBit);
+    proof = out.proof;
+    publicSignals = out.publicSignals;
+    proofOk = await gatekeeper.verifyLocally(proof, publicSignals);
   } catch (e) {
     error = e.message;
   }
@@ -61,8 +63,13 @@ export async function demoJson(name = "valid") {
     reason_code: decision.reason_code,
     decision_bit: decision.decisionBit.toString(),
     proof_verified_locally: proofOk,
+    proof,
     public_signals: publicSignals,
     proof_error: error,
+    verify_it_yourself:
+      "snarkjs.groth16.verify(circuits/gatekeeper_vk.json, public_signals, proof) must return true — " +
+      "the verification key is the one published at agentgames.zkverify.io/api/circuit-info.", 
+    vk_hash: VK,
     elapsed_ms: Date.now() - t0,
     note:
       "The circuit asserts decision == AND(vk match, balance>=minimum, currentBlock<expiryBlock, recipient match, amount<=maxTransfer), " +
