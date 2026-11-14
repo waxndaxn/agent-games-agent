@@ -28,6 +28,16 @@ export function sign(rawBody, secret) {
   return createHmac("sha256", secret).update(rawBody).digest("hex");
 }
 
+/**
+ * Multi-agent support: the platform issues one secret per registered agent, and a single endpoint can
+ * serve several agents (one per event). Returns the secret that matched, or null.
+ */
+export function verifyAny(rawBody, header, secrets) {
+  const list = (Array.isArray(secrets) ? secrets : [secrets]).filter(Boolean);
+  for (const s of list) if (verify(rawBody, header, s)) return s;
+  return null;
+}
+
 /** True only when the header is a valid HMAC of the exact raw body. Fails closed on anything odd. */
 export function verify(rawBody, header, secret) {
   if (!secret) return false;

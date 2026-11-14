@@ -1,0 +1,44 @@
+# Fly.io config for the Agent Games endpoint.
+#   fly launch --no-deploy --copy-config --name <app> --region sin
+#   fly secrets set AGENT_GAMES_HMAC_SECRET=... STV_SALT=... KURIER_API_KEY=...
+#   fly deploy
+app = "waxndaxn-agent-games"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  AGENT_PATH = "/agent"
+  NODE_ENV = "production"
+  STORE_PATH = "/data/store.json"
+  STV_PARAMS = "10,30,0,0,0,0,0,0"
+  STV_PROOF_INLINE = "1"
+  VK_HASH_MODE = "bigint"
+  TASK_ID_MODE = "keccak"
+  HARD_DEADLINE_MS = "45000"
+
+# One always-on machine: the platform POSTs tasks on its own schedule and a cold start would eat
+# into the 60 s decision window.
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[mounts]]
+  source = "agent_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
