@@ -1,0 +1,21 @@
+{
+  "name": "agent-games-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "zkVerify Agent Games endpoint - Proof Gatekeeper + Steal the VFY (HMAC-signed, Groth16 proofs)",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test --test-force-exit test/run-tests.mjs",
+    "commitment": "node scripts/gen-commitment.mjs",
+    "e2e": "node test/e2e.mjs"
+  },
+  "dependencies": {
+    "circomlibjs": "^0.1.7",
+    "js-sha3": "^0.9.3",
+    "snarkjs": "^0.7.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
